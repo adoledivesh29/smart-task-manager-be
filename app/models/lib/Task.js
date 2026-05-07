@@ -1,5 +1,23 @@
 const mongoose = require('mongoose');
 
+const CategoryMetaSchema = new mongoose.Schema(
+  {
+    sName: {
+      type: String,
+      default: '',
+    },
+    sColor: {
+      type: String,
+      default: '',
+    },
+    sIcon: {
+      type: String,
+      default: '',
+    },
+  },
+  { _id: false }
+);
+
 const TaskSchema = new mongoose.Schema(
   {
     sTitle: {
@@ -17,6 +35,10 @@ const TaskSchema = new mongoose.Schema(
     },
     sCategory: {
       type: String,
+    },
+    oCategoryMeta: {
+      type: CategoryMetaSchema,
+      default: undefined,
     },
     bIsCompleted: {
       type: Boolean,

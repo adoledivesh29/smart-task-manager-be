@@ -1,5 +1,5 @@
 const { Task } = require('../../../../models');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { taskService } = require('../../../../services');
 
 const controllers = {};
 
@@ -10,37 +10,9 @@ controllers.createTask = async (req, res) => {
     if (!sTitle) return res.reply(messages.badRequestCM(messages.custom.required_field['EN']));
     if (!sDescription) return res.reply(messages.badRequestCM(messages.custom.required_field['EN']));
 
-    let nDifficultyScore;
-    let sCategory;
-
-    try {
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: { responseMimeType: 'application/json' } });
-
-      const prompt = `Analyze the following task description and provide a difficulty score (1-10) and a suitable category (e.g., Coding, Personal, Finance, Work, Health, Home). 
-Task Description: "${sDescription}"
-Respond exactly with a JSON object in this format: {"difficultyScore": number, "category": string}`;
-
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
-      const parsed = JSON.parse(responseText);
-
-      if (!parsed.difficultyScore || !parsed.category) {
-        return res.reply(messages.serverErrorCM('AI did not return a valid difficulty score or category. Task not saved.'));
-      }
-
-      nDifficultyScore = parsed.difficultyScore;
-      sCategory = parsed.category;
-    } catch (aiError) {
-      console.error('Error generating AI metadata for task:', aiError);
-      return res.reply(messages.serverErrorCM('Failed to get AI response. Task not saved.'));
-    }
-
-    const newTask = await Task.create({
+    const newTask = await taskService.createTask({
       sTitle,
       sDescription,
-      nDifficultyScore,
-      sCategory,
       iUserId: req.user._id,
     });
 
@@ -53,7 +25,7 @@ Respond exactly with a JSON object in this format: {"difficultyScore": number, "
 
 controllers.getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({ iUserId: req.user._id }).sort({ dCreatedAt: -1 });
+    const tasks = await taskService.getTasksByUserId(req.user._id);
     return res.reply(messages.successCM('Tasks fetched successfully.'), tasks);
   } catch (error) {
     return res.reply(messages.serverErrorCM(messages.custom.server_error['EN']), error.toString());
@@ -117,11 +89,8 @@ controllers.getTaskMetadata = async (req, res) => {
 
 controllers.toggleComplete = async (req, res) => {
   try {
-    const task = await Task.findOne({ _id: req.params.id, iUserId: req.user._id });
+    const task = await taskService.toggleTask(req.params.id, req.user._id);
     if (!task) return res.reply(messages.notFoundCM('Task not found.'));
-
-    task.bIsCompleted = !task.bIsCompleted;
-    await task.save();
 
     return res.reply(messages.successCM(`Task marked as ${task.bIsCompleted ? 'completed' : 'incomplete'}.`), task);
   } catch (error) {
@@ -131,7 +100,7 @@ controllers.toggleComplete = async (req, res) => {
 
 controllers.deleteTask = async (req, res) => {
   try {
-    const task = await Task.findOneAndDelete({ _id: req.params.id, iUserId: req.user._id });
+    const task = await taskService.deleteTask(req.params.id, req.user._id);
     if (!task) return res.reply(messages.notFoundCM('Task not found.'));
 
     return res.reply(messages.successCM('Task deleted successfully.'));
