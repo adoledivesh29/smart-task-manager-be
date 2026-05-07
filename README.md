@@ -1,109 +1,144 @@
-# Smart Task Manager Backend
+# Smart Task Manager Backend 🚀
 
-Backend API for a smart task manager built with Node.js, Express, MongoDB, and Google Gemini. Users can register, log in, manage their profile, create tasks, and get AI-generated task metadata such as category and difficulty score.
+Backend API for an AI-powered smart task manager built with **Node.js, Express, MongoDB, and Gemini AI**.
 
-## What This Project Does
+This backend handles authentication, profile management, task CRUD operations, and AI-generated task enrichment including difficulty scoring, category classification, dynamic color generation, and icon metadata for frontend rendering.
 
-- Provides user authentication with token-based access control
-- Stores users and tasks in MongoDB via Mongoose
-- Uses Google Gemini to analyze task descriptions during task creation
-- Tracks task completion and returns task summary metadata for the signed-in user
+---
 
-## Tech Stack
+# ✨ Features
+
+- User authentication with JWT
+- Secure profile management
+- Task creation, update, toggle, and deletion
+- AI-generated task difficulty scoring
+- AI-generated task category classification
+- Dynamic task color generation
+- Backend-controlled icon mapping and fallback handling
+- Task analytics and completion summary
+- Gemini-powered task enrichment workflow
+- Health monitoring route
+
+---
+
+# 🛠 Tech Stack
+
+## Backend
 
 - Node.js
-- Express
-- MongoDB + Mongoose
-- JSON Web Token
-- Google Generative AI SDK
-- Helmet, CORS, Compression, Morgan
+- Express.js
+- MongoDB
+- Mongoose
+- JWT Authentication
+- Google Gemini API
+- Helmet
+- Morgan
+- Compression
+- CORS
 
-## Current Features
+---
 
-- User registration
-- User login
-- Auth-protected profile routes
-- Create, list, toggle, and delete tasks
-- Task analytics:
-  total tasks, completed tasks, pending tasks, average difficulty, and completion percentage
-- AI-generated task category and difficulty score on create
-- Simple `/ping` health route
-
-## Project Structure
+# 📂 Project Structure
 
 ```text
 smart-task-manager-be/
-|-- app/
-|   |-- models/
-|   |   |-- lib/
-|   |-- routers/
-|   |   |-- middleware/
-|   |   |-- user/
-|   |       |-- auth/
-|   |       |-- profile/
-|   |       |-- tasks/
-|   |-- utils/
-|       |-- lib/
-|-- globals/
-|   |-- lib/
-|-- index.js
-|-- package.json
-|-- README.md
+│
+├── app/
+│   ├── models/
+│   ├── routers/
+│   │   ├── middleware/
+│   │   └── user/
+│   │       ├── auth/
+│   │       ├── profile/
+│   │       └── tasks/
+│   ├── services/
+│   └── utils/
+│
+├── globals/
+│
+├── index.js
+├── package.json
+└── README.md
 ```
 
-## Environment Variables
+---
 
-Create a `.env` file in the project root with these values:
+# ⚙️ Environment Variables
+
+Create a `.env` file in the root directory.
 
 ```env
 NODE_ENV=development
 PORT=3013
+
 DB_URL=mongodb://127.0.0.1:27017/smart-task-manager
-JWT_SECRET=replace_with_a_secure_secret
-GEMINI_API_KEY=replace_with_your_gemini_api_key
+
+JWT_SECRET=replace_with_secure_secret
+
+GEMINI_API_KEY=replace_with_gemini_api_key
 ```
 
-## Installation
+---
+
+# 🚀 Installation
+
+## Install Dependencies
 
 ```bash
 npm install
 ```
 
-## Running Locally
-
-Start the server:
+## Start Server
 
 ```bash
-node index.js
+npm start
 ```
 
-The server binds to `0.0.0.0` on the port from `PORT`.
-
-## Base URL
+Server runs on:
 
 ```text
+http://localhost:3013
+```
+
+---
+
+# 🌐 Base URLs
+
+```text
+Health Check:
+http://localhost:3013/ping
+
+API Base URL:
 http://localhost:3013/api/v1/user
 ```
 
-## Authentication
+---
+
+# 🔐 Authentication
 
 Protected routes require the `authorization` header.
 
-On successful login, the API returns the token in the response header:
+Example:
 
 ```text
 authorization: <jwt-token>
 ```
 
-## API Endpoints
+JWT token is returned in the response headers after successful login.
 
-### Auth
+---
 
-#### `POST /auth/register`
+# 📡 API Endpoints
 
-Create a user account.
+# Auth
 
-Request body:
+## Register
+
+```http
+POST /auth/register
+```
+
+Request:
 
 ```json
 {
@@ -112,11 +147,15 @@ Request body:
 }
 ```
 
-#### `POST /auth/login`
+---
 
-Log in and receive an auth token in the `authorization` response header.
+## Login
 
-Request body:
+```http
+POST /auth/login
+```
+
+Request:
 
 ```json
 {
@@ -125,17 +164,25 @@ Request body:
 }
 ```
 
-### Profile
+---
 
-#### `GET /profile`
+# Profile
 
-Get the current user's profile.
+## Get Profile
 
-#### `PUT /profile/update`
+```http
+GET /profile
+```
 
-Update username or email.
+---
 
-Request body:
+## Update Profile
+
+```http
+PUT /profile/update
+```
+
+Request:
 
 ```json
 {
@@ -144,11 +191,15 @@ Request body:
 }
 ```
 
-#### `POST /profile/change/password`
+---
 
-Change the current user's password.
+## Change Password
 
-Accepted body fields:
+```http
+POST /profile/change/password
+```
+
+Request:
 
 ```json
 {
@@ -157,46 +208,58 @@ Accepted body fields:
 }
 ```
 
-This route also accepts legacy keys:
+---
 
-```json
-{
-  "sPassword": "old-pass",
-  "sNewPassword": "new-pass"
-}
+## Logout
+
+```http
+POST /profile/logout
 ```
 
-#### `POST /profile/logout`
+---
 
-Clears the saved token for the current user.
+# Tasks
 
-### Tasks
+## Create Task
 
-#### `POST /tasks`
+```http
+POST /tasks
+```
 
-Create a task. The backend sends `sDescription` to Gemini and stores:
-
-- `nDifficultyScore`
-- `sCategory`
-
-Request body:
+Request:
 
 ```json
 {
   "sTitle": "Finish backend README",
-  "sDescription": "Rewrite the documentation so setup and endpoints are clear."
+  "sDescription": "Rewrite documentation clearly."
 }
 ```
 
-#### `GET /tasks`
+During task creation, Gemini AI generates:
 
-Return all tasks for the current user, sorted by newest first.
+- difficulty score
+- category
+- color metadata
 
-#### `GET /tasks/metadata`
+---
 
-Return aggregate task stats for the current user.
+## Get Tasks
 
-Example response data:
+```http
+GET /tasks
+```
+
+Returns normalized task data including metadata fields.
+
+---
+
+## Task Analytics
+
+```http
+GET /tasks/metadata
+```
+
+Example Response:
 
 ```json
 {
@@ -204,66 +267,112 @@ Example response data:
   "nCompletedTasks": 5,
   "nPendingTasks": 3,
   "nAverageDifficulty": 6.4,
-  "nCompletionPercentage": 63,
-  "sCompletionLabel": "5 of 8 tasks finished"
+  "nCompletionPercentage": 63
 }
 ```
 
-#### `POST /tasks/:id/toggle`
+---
 
-Toggle a task between complete and incomplete.
+## Toggle Task
 
-#### `DELETE /tasks/:id`
+```http
+POST /tasks/:id/toggle
+```
 
-Delete a task owned by the current user.
+---
 
-## Health Check
+## Delete Task
 
-#### `GET /ping`
+```http
+DELETE /tasks/:id
+```
 
-Returns a simple HTML response confirming the server is running.
+---
 
-## Data Models
+# 🧠 AI Task Enrichment
 
-### User
-
-- `sUserName`
-- `sEmail`
-- `sPassword`
-- `sToken`
-- `isEmailVerified`
-- `sProfilePic`
-
-### Task
-
-- `sTitle`
-- `sDescription`
-- `nDifficultyScore`
-- `sCategory`
-- `bIsCompleted`
-- `iUserId`
-- `dCreatedAt`
-- `dUpdatedAt`
-
-## Gemini Integration
-
-When a task is created, the backend asks Gemini to return JSON in this shape:
+When a task is created, the backend sends the task description to Gemini AI and expects structured metadata like:
 
 ```json
 {
   "difficultyScore": 7,
-  "category": "Work"
+  "category": "Work",
+  "color": "#3B82F6"
 }
 ```
 
-If Gemini does not respond correctly, the task is not saved.
+The backend then:
 
-## Notes
+- validates difficulty score
+- validates category
+- validates HEX color format
+- maps category icons
+- applies safe fallback values when needed
 
-- There is currently no `.env.example` file in the repo.
-- There is currently no working development script like `npm run dev`.
-- `npm test` is still the default placeholder script and does not run a real test suite.
+Fallback metadata:
 
-## License
+```json
+{
+  "category": "Other",
+  "color": "#9CA3AF",
+  "icon": "tag"
+}
+```
+
+---
+
+# 🤖 AI-Assisted Development Workflow
+
+This backend was built using an AI-assisted engineering workflow and completed in approximately **3 hours**.
+
+AI tools were used to accelerate development, reduce boilerplate effort, improve debugging speed, and streamline implementation while keeping architecture and integration decisions manually controlled.
+
+---
+
+# 🛠 AI Tools Used
+
+## Cursor
+
+- Used to scaffold Express backend structure
+- Assisted in route and controller generation
+- Helped accelerate API integration workflows
+- Used for rapid refactoring and debugging
+
+## ChatGPT
+
+- Used for backend architecture planning
+- Assisted in MongoDB schema and API structure design
+- Helped debug authentication, deployment, and MongoDB issues
+- Assisted in Gemini integration workflows
+- Helped refine project documentation
+
+## Coded
+
+- Used to accelerate reusable backend utility generation
+- Assisted in rapid implementation iteration
+
+## Antigravity
+
+- Used to improve development workflow productivity
+- Helped reduce repetitive backend setup effort
+
+
+# 🏗 Current Capabilities
+
+- Modular backend structure
+- AI-enriched task metadata
+- Backward-compatible task normalization
+- Safe fallback handling
+- JWT-secured routes
+- User-level task analytics
+
+
+# ❤️ Development Philosophy
+
+This project demonstrates an **AI-augmented backend engineering workflow** where AI tools were used as development copilots to accelerate productivity while maintaining manual control over implementation, debugging, architecture, validation, and deployment decisions.
+
+---
+
+# 📄 License
 
 ISC
