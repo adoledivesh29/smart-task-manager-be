@@ -1,5 +1,5 @@
 const { Task } = require('../../models');
-const { getCategoryMetadata } = require('../../utils').categoryMetadata;
+const { resolveCategoryPresentation } = require('../../utils').categoryMetadata;
 const taskAIService = require('./task-ai.service');
 
 function toPlainObject(task) {
@@ -11,34 +11,31 @@ function formatTask(task) {
   const plainTask = toPlainObject(task);
   if (!plainTask) return null;
 
-  const categoryName = plainTask.oCategoryMeta?.sName || plainTask.sCategory;
-  const categoryMetadata = getCategoryMetadata(categoryName);
+  const categoryPresentation = resolveCategoryPresentation({
+    category: plainTask.oCategoryMeta?.sName || plainTask.sCategory,
+    color: plainTask.oCategoryMeta?.sColor,
+    icon: plainTask.oCategoryMeta?.sIcon,
+  });
 
   return {
     ...plainTask,
-    sCategory: categoryMetadata.sCategory,
-    oCategoryMeta: {
-      ...categoryMetadata.oCategoryMeta,
-      ...plainTask.oCategoryMeta,
-      sName: plainTask.oCategoryMeta?.sName || categoryMetadata.oCategoryMeta.sName,
-      sColor: plainTask.oCategoryMeta?.sColor || categoryMetadata.oCategoryMeta.sColor,
-      sIcon: plainTask.oCategoryMeta?.sIcon || categoryMetadata.oCategoryMeta.sIcon,
-    },
-    sCategoryColor: plainTask.oCategoryMeta?.sColor || categoryMetadata.sCategoryColor,
-    sCategoryIcon: plainTask.oCategoryMeta?.sIcon || categoryMetadata.sCategoryIcon,
+    ...categoryPresentation,
   };
 }
 
 async function createTask({ sTitle, sDescription, iUserId }) {
   const aiAnalysis = await taskAIService.analyzeTaskDescription(sDescription);
-  const categoryMetadata = getCategoryMetadata(aiAnalysis.sCategory);
+  const categoryPresentation = resolveCategoryPresentation({
+    category: aiAnalysis.sCategory,
+    color: aiAnalysis.sCategoryColor,
+  });
 
   const newTask = await Task.create({
     sTitle,
     sDescription,
     nDifficultyScore: aiAnalysis.nDifficultyScore,
-    sCategory: categoryMetadata.sCategory,
-    oCategoryMeta: categoryMetadata.oCategoryMeta,
+    sCategory: categoryPresentation.sCategory,
+    oCategoryMeta: categoryPresentation.oCategoryMeta,
     iUserId,
   });
 

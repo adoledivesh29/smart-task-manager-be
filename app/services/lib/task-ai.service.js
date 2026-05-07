@@ -30,10 +30,17 @@ function sanitizeCategory(value) {
   return sanitizedValue || FALLBACK_CATEGORY_NAME;
 }
 
+function sanitizeColor(value) {
+  if (typeof value !== 'string') return null;
+  const sanitizedValue = value.trim();
+  return /^#([0-9A-Fa-f]{6})$/.test(sanitizedValue) ? sanitizedValue.toUpperCase() : null;
+}
+
 async function analyzeTaskDescription(sDescription) {
   const fallbackResult = {
     nDifficultyScore: null,
     sCategory: FALLBACK_CATEGORY_NAME,
+    sCategoryColor: null,
   };
 
   try {
@@ -47,9 +54,9 @@ async function analyzeTaskDescription(sDescription) {
       },
     });
 
-    const prompt = `Analyze the following task description and return a JSON object with a difficultyScore from 1 to 10 and a single category name.
+    const prompt = `Analyze the following task description and return a JSON object with a difficultyScore from 1 to 10, a single category name, and a hex color for that category.
 Task Description: "${sDescription}"
-Respond with JSON only in this format: {"difficultyScore": number, "category": string}`;
+Respond with JSON only in this format: {"difficultyScore": number, "category": string, "color": "#RRGGBB"}`;
 
     const result = await model.generateContent(prompt);
     const responseText = result?.response?.text?.() || '';
@@ -60,6 +67,7 @@ Respond with JSON only in this format: {"difficultyScore": number, "category": s
     return {
       nDifficultyScore: sanitizeDifficultyScore(parsedResponse?.difficultyScore),
       sCategory: sanitizeCategory(parsedResponse?.category),
+      sCategoryColor: sanitizeColor(parsedResponse?.color),
     };
   } catch (error) {
     console.error('task-ai.service analyzeTaskDescription error:', error);

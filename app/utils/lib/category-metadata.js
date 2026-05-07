@@ -74,10 +74,26 @@ function getCategoryMetadata(category) {
   };
 }
 
+function resolveCategoryPresentation({ category, color, icon }) {
+  const categoryMetadata = getCategoryMetadata(category);
+
+  return {
+    sCategory: categoryMetadata.sCategory,
+    sCategoryColor: color || categoryMetadata.sCategoryColor,
+    sCategoryIcon: icon || categoryMetadata.sCategoryIcon,
+    oCategoryMeta: {
+      sName: categoryMetadata.sCategory,
+      sColor: color || categoryMetadata.oCategoryMeta.sColor,
+      sIcon: icon || categoryMetadata.oCategoryMeta.sIcon,
+    },
+  };
+}
+
 module.exports = {
   CATEGORY_METADATA,
   FALLBACK_CATEGORY_NAME,
   FALLBACK_CATEGORY_COLOR,
   FALLBACK_CATEGORY_ICON,
   getCategoryMetadata,
+  resolveCategoryPresentation,
 };
